@@ -23,6 +23,10 @@ function setup() {
 function draw() {
   background(30);
 
+  // 드래그 중이면 위치 업데이트
+  attractor.drag(mouseX, mouseY);
+  repeller.drag(mouseX, mouseY);
+
   // 중력 (아래 방향 힘)
   let gravity = createVector(0, 0.1);
   particleSystem.applyForce(gravity);
@@ -51,6 +55,28 @@ function displayInfo() {
   noStroke();
   textSize(14);
   text(`Particles: ${particleSystem.particles.length}`, 20, 30);
-  text('녹색 원: Attractor (끌어당김)', 20, 50);
-  text('빨간색 원: Repeller (밀어냄)', 20, 70);
+  text('녹색 원: Attractor (끌어당김) - 드래그로 이동', 20, 50);
+  text('빨간색 원: Repeller (밀어냄) - 드래그로 이동', 20, 70);
+}
+
+// ============================================
+// 마우스 이벤트 핸들러
+// ============================================
+
+// 마우스 클릭 시
+function mousePressed() {
+  // Attractor 클릭 확인
+  if (attractor.contains(mouseX, mouseY)) {
+    attractor.startDrag(mouseX, mouseY);
+  }
+  // Repeller 클릭 확인
+  if (repeller.contains(mouseX, mouseY)) {
+    repeller.startDrag(mouseX, mouseY);
+  }
+}
+
+// 마우스 버튼 놓을 때
+function mouseReleased() {
+  attractor.stopDrag();
+  repeller.stopDrag();
 }

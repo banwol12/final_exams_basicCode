@@ -7,6 +7,34 @@ class Attractor {
         this.position = createVector(x, y);
         this.strength = strength;  // 끌어당기는 힘의 세기
         this.radius = 30;
+        this.dragging = false;     // 드래그 상태
+        this.dragOffset = createVector(0, 0);  // 드래그 오프셋
+    }
+
+    // 마우스가 이 객체 위에 있는지 확인
+    contains(mx, my) {
+        let d = dist(mx, my, this.position.x, this.position.y);
+        return d < this.radius;
+    }
+
+    // 드래그 시작
+    startDrag(mx, my) {
+        this.dragging = true;
+        this.dragOffset.x = this.position.x - mx;
+        this.dragOffset.y = this.position.y - my;
+    }
+
+    // 드래그 중
+    drag(mx, my) {
+        if (this.dragging) {
+            this.position.x = mx + this.dragOffset.x;
+            this.position.y = my + this.dragOffset.y;
+        }
+    }
+
+    // 드래그 종료
+    stopDrag() {
+        this.dragging = false;
     }
 
     // 파티클에 작용할 인력 계산
