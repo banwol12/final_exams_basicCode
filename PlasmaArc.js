@@ -1,56 +1,57 @@
 // ============================================
 // PlasmaArc 클래스
-// 플라즈마 구슬의 번개 가닥
+// 더 얇고 파란 전기
 // ============================================
 class PlasmaArc {
-    constructor(centerX, centerY, radius) {
-        this.center = createVector(centerX, centerY);
-        this.radius = radius;
-        this.segments = 15;  // 번개 세그먼트 수
+    constructor(angle) {
+        this.baseAngle = angle;
+        this.currentAngle = angle;
+        this.segments = 10;
         this.points = [];
-        this.targetAngle = random(TWO_PI);
-        this.currentAngle = this.targetAngle;
-        this.hue = random(260, 320);  // 보라~분홍 색상
-        this.flickerSpeed = random(0.02, 0.05);
+        this.hue = random(180, 220);  // 파란색 범위로 변경
+
+        // 느린 움직임
+        this.noiseOffset = random(1000);
+        this.speed = random(0.005, 0.01);
+        this.amplitude = random(0.3, 0.5);
     }
 
     // 번개 경로 생성
-    generatePath(targetX, targetY) {
+    generatePath(centerX, centerY, radius) {
         this.points = [];
 
-        // 시작점 (구슬 표면)
-        let startAngle = atan2(targetY - this.center.y, targetX - this.center.x);
-        let startX = this.center.x + cos(startAngle) * 30;
-        let startY = this.center.y + sin(startAngle) * 30;
+        this.noiseOffset += this.speed;
+        let angleVariation = (noise(this.noiseOffset) - 0.5) * TWO_PI * this.amplitude;
+        this.currentAngle = this.baseAngle + angleVariation;
 
-        // 끝점 (구슬 경계 근처, 마우스 방향)
-        let endX = this.center.x + cos(startAngle) * this.radius * 0.9;
-        let endY = this.center.y + sin(startAngle) * this.radius * 0.9;
+        let startX = centerX + cos(this.currentAngle) * 15;
+        let startY = centerY + sin(this.currentAngle) * 15;
+
+        let endX = centerX + cos(this.currentAngle) * radius * 0.9;
+        let endY = centerY + sin(this.currentAngle) * radius * 0.9;
 
         for (let i = 0; i <= this.segments; i++) {
             let t = i / this.segments;
-
-            // 기본 직선 보간
             let x = lerp(startX, endX, t);
             let y = lerp(startY, endY, t);
 
-            // 지그재그 효과 (중간 부분에서 더 강하게)
-            let jitter = sin(t * PI) * 20;
-            x += random(-jitter, jitter);
-            y += random(-jitter, jitter);
+            // 지그재그 (더 작게)
+            let jitter = sin(t * PI) * 15;
+            x += (noise(this.noiseOffset + i * 0.3) - 0.5) * jitter * 2;
+            y += (noise(this.noiseOffset + i * 0.3 + 50) - 0.5) * jitter * 2;
 
             this.points.push(createVector(x, y));
         }
     }
 
-    // 렌더링
+    // 렌더링 (더 얇게)
     display() {
         if (this.points.length < 2) return;
 
-        // 여러 레이어로 글로우 효과
-        for (let layer = 3; layer >= 0; layer--) {
-            let alpha = map(layer, 3, 0, 30, 200);
-            let weight = map(layer, 3, 0, 12, 2);
+        // 글로우 (2레이어만, 더 얇게)
+        for (let layer = 2; layer >= 0; layer--) {
+            let alpha = map(layer, 2, 0, 30, 200);
+            let weight = map(layer, 2, 0, 6, 1);  // 더 얇게
 
             stroke(this.hue, 200, 255, alpha);
             strokeWeight(weight);
@@ -58,7 +59,7 @@ class PlasmaArc {
 
             beginShape();
             for (let p of this.points) {
-                vertex(p.x, p.y);
+                curveVertex(p.x, p.y);
             }
             endShape();
         }
