@@ -1,82 +1,54 @@
 // ============================================
-// Classic Particle System - Main Sketch
-// 클래식한 파티클 시스템 메인 스케치
+// Plasma Simulation - Main Sketch
+// 플라즈마 시뮬레이션 메인 스케치
+// NOC 기반 파티클 시스템
 // ============================================
 
-let particleSystem;
-let attractor;
-let repeller;
+let plasma;
 
 function setup() {
   createCanvas(800, 600);
+  colorMode(HSB, 360, 255, 255, 255);  // HSB 컬러 모드 (글로우 효과용)
 
-  // 파티클 시스템 생성 (화면 상단 중앙에서 파티클 방출)
-  particleSystem = new ParticleSystem(createVector(width / 2, 50));
-
-  // Attractor (끌어당기는 힘) - 화면 중앙
-  attractor = new Attractor(width / 2, height / 2, 150);
-
-  // Repeller (밀어내는 힘) - 화면 하단
-  repeller = new Repeller(width / 2, height - 100, 100);
+  // 플라즈마 생성 (50개 전자)
+  plasma = new Plasma(50);
 }
 
 function draw() {
-  background(30);
+  // 잔상 효과를 위한 반투명 배경
+  background(240, 50, 20, 40);
 
-  // 드래그 중이면 위치 업데이트
-  attractor.drag(mouseX, mouseY);
-  repeller.drag(mouseX, mouseY);
+  // 핵 위치를 마우스로 업데이트
+  plasma.updateNucleus(mouseX, mouseY);
 
-  // 중력 (아래 방향 힘)
-  let gravity = createVector(0, 0.1);
-  particleSystem.applyForce(gravity);
-
-  // Attractor의 힘 적용
-  particleSystem.applyAttractor(attractor);
-
-  // Repeller의 힘 적용
-  particleSystem.applyRepeller(repeller);
-
-  // 파티클 시스템 업데이트 및 렌더링
-  particleSystem.addParticle();
-  particleSystem.update();
-  particleSystem.display();
-
-  // Attractor와 Repeller 표시
-  attractor.display();
-  repeller.display();
+  // 플라즈마 업데이트 및 렌더링
+  plasma.update();
+  plasma.display();
 
   // 정보 표시
   displayInfo();
 }
 
 function displayInfo() {
-  fill(255);
+  fill(0, 0, 255);
   noStroke();
   textSize(14);
-  text(`Particles: ${particleSystem.particles.length}`, 20, 30);
-  text('녹색 원: Attractor (끌어당김) - 드래그로 이동', 20, 50);
-  text('빨간색 원: Repeller (밀어냄) - 드래그로 이동', 20, 70);
+  text('마우스를 움직여 플라즈마 핵을 조종하세요', 20, 30);
+  text(`전자 수: ${plasma.electrons.length}`, 20, 50);
 }
 
-// ============================================
-// 마우스 이벤트 핸들러
-// ============================================
-
-// 마우스 클릭 시
+// 클릭으로 전자 추가
 function mousePressed() {
-  // Attractor 클릭 확인
-  if (attractor.contains(mouseX, mouseY)) {
-    attractor.startDrag(mouseX, mouseY);
-  }
-  // Repeller 클릭 확인
-  if (repeller.contains(mouseX, mouseY)) {
-    repeller.startDrag(mouseX, mouseY);
-  }
+  let angle = random(TWO_PI);
+  let radius = random(30, 80);
+  let x = mouseX + cos(angle) * radius;
+  let y = mouseY + sin(angle) * radius;
+  plasma.electrons.push(new Electron(x, y));
 }
 
-// 마우스 버튼 놓을 때
-function mouseReleased() {
-  attractor.stopDrag();
-  repeller.stopDrag();
+// 키보드로 전자 초기화
+function keyPressed() {
+  if (key === 'r' || key === 'R') {
+    plasma = new Plasma(50);
+  }
 }
