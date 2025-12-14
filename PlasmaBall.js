@@ -1,25 +1,21 @@
 // ============================================
 // PlasmaBall 클래스
-// 핵 + 전자 파티클 + 전기
+// 핵 + 전자들 (각 전자가 핵과 1:1 전기 연결)
 // ============================================
 class PlasmaBall {
     constructor(x, y, radius) {
         this.position = createVector(x, y);
         this.radius = radius;
-        this.numArcs = 8;
-        this.arcs = [];
-
-        // 번개 생성
-        for (let i = 0; i < this.numArcs; i++) {
-            let angle = (i / this.numArcs) * TWO_PI;
-            this.arcs.push(new PlasmaArc(angle));
-        }
 
         // 전자 파티클들
         this.electrons = [];
-        this.numElectrons = 30;
+        this.numElectrons = 15;  // 개수 조정
         for (let i = 0; i < this.numElectrons; i++) {
-            this.electrons.push(new Electron(x, y, radius));
+            let angle = (i / this.numElectrons) * TWO_PI + random(-0.3, 0.3);
+            let dist = random(60, radius * 0.75);
+            let ex = x + cos(angle) * dist;
+            let ey = y + sin(angle) * dist;
+            this.electrons.push(new Electron(ex, ey));
         }
 
         // 코어
@@ -27,7 +23,7 @@ class PlasmaBall {
         this.pulsePhase = 0;
     }
 
-    // 핵 위치 업데이트
+    // 핵 위치 업데이트 (마우스 따라감)
     updatePosition(mx, my) {
         this.position.x = mx;
         this.position.y = my;
@@ -37,21 +33,42 @@ class PlasmaBall {
     update() {
         this.pulsePhase += 0.03;
 
-        // 번개 업데이트
-        for (let arc of this.arcs) {
-            arc.generatePath(this.position.x, this.position.y, this.radius);
-        }
-
-        // 전자 업데이트
         for (let electron of this.electrons) {
-            electron.update(this.position.x, this.position.y);
+            // 핵에 대한 인력
+            let attraction = electron.attractTo(this.position);
+            electron.applyForce(attraction);
+
+            // 궤도 속도
+            electron.addOrbitalVelocity(this.position);
+
+            // 마찰력
+            electron.velocity.mult(0.98);
+
+            // 물리 업데이트
+            electron.update();
+
+            // 구슬 안에 유지
+            this.constrainElectron(electron);
+
+            // 전기 경로 생성 (핵과 1:1 연결)
+            electron.generateArc(this.position);
         }
     }
 
-    // 전자 파티클 렌더링
-    displayElectrons() {
-        for (let electron of this.electrons) {
-            electron.display();
+    // 전자를 구슬 안에 유지
+    constrainElectron(electron) {
+        let d = p5.Vector.dist(electron.position, this.position);
+        if (d > this.radius * 0.85) {
+            let dir = p5.Vector.sub(electron.position, this.position);
+            dir.normalize();
+            electron.position = p5.Vector.add(this.position, dir.mult(this.radius * 0.85));
+            electron.velocity.mult(-0.3);
+        }
+        // 너무 가까우면 밀어냄
+        if (d < 40) {
+            let dir = p5.Vector.sub(electron.position, this.position);
+            dir.normalize();
+            electron.position = p5.Vector.add(this.position, dir.mult(40));
         }
     }
 
@@ -76,57 +93,17 @@ class PlasmaBall {
 
     // 전체 렌더링
     display() {
-        // 전자 파티클
-        this.displayElectrons();
-
-        // 번개
-        for (let arc of this.arcs) {
-            arc.display();
+        // 전기 (뒤에)
+        for (let electron of this.electrons) {
+            electron.displayArc();
         }
 
-        // 코어
+        // 전자들
+        for (let electron of this.electrons) {
+            electron.display();
+        }
+
+        // 코어 (앞에)
         this.displayCore();
-    }
-}
-
-// ============================================
-// Electron 클래스 (전자 파티클)
-// ============================================
-class Electron {
-    constructor(centerX, centerY, maxRadius) {
-        this.maxRadius = maxRadius;
-        this.angle = random(TWO_PI);
-        this.orbitRadius = random(50, maxRadius * 0.85);
-        this.speed = random(0.005, 0.02);
-        this.size = random(2, 5);
-        this.hue = random(180, 220);
-        this.alpha = random(100, 200);
-
-        // 위치
-        this.x = centerX + cos(this.angle) * this.orbitRadius;
-        this.y = centerY + sin(this.angle) * this.orbitRadius;
-    }
-
-    update(centerX, centerY) {
-        // 궤도 회전
-        this.angle += this.speed;
-
-        // 약간의 흔들림
-        let wobble = noise(this.angle * 2) * 20 - 10;
-
-        this.x = centerX + cos(this.angle) * (this.orbitRadius + wobble);
-        this.y = centerY + sin(this.angle) * (this.orbitRadius + wobble);
-    }
-
-    display() {
-        noStroke();
-
-        // 글로우
-        fill(this.hue, 200, 255, this.alpha * 0.3);
-        ellipse(this.x, this.y, this.size * 3);
-
-        // 코어
-        fill(this.hue, 150, 255, this.alpha);
-        ellipse(this.x, this.y, this.size);
     }
 }
