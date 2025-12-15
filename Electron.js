@@ -13,8 +13,8 @@ class Electron {
         this.radius = this.mass * 3;
         this.charge = random(0.8, 1.2);
 
-        // 색상
-        this.hue = random(180, 220);  // 파란색
+        // 색상 (더 다양하게)
+        this.hue = random(160, 320);  // 파랑~보라~분홍
         this.energy = random(150, 255);
 
         // 전기 경로 (핵과 연결)

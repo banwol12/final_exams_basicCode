@@ -46,10 +46,9 @@ function draw() {
   plasmaBall.display();
 }
 
-// 클릭으로 번개 추가
+// 클릭으로 전자 추가
 function mousePressed() {
-  let angle = random(TWO_PI);
-  plasmaBall.arcs.push(new PlasmaArc(angle));
+  plasmaBall.addElectron(mouseX, mouseY);
 }
 
 // R키로 리셋

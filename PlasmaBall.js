@@ -29,6 +29,16 @@ class PlasmaBall {
         this.position.y = my;
     }
 
+    // 전자 추가 (클릭 시)
+    addElectron(mx, my) {
+        // 클릭 위치 근처에 전자 생성
+        let angle = random(TWO_PI);
+        let dist = random(50, this.radius * 0.7);
+        let ex = this.position.x + cos(angle) * dist;
+        let ey = this.position.y + sin(angle) * dist;
+        this.electrons.push(new Electron(ex, ey));
+    }
+
     // 업데이트
     update() {
         this.pulsePhase += 0.03;
